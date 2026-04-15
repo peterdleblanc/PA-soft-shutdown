@@ -46,13 +46,13 @@ set "PS_TEMP=%TEMP%\pa_shutdown_%RANDOM%.ps1"
     echo [Runtime.InteropServices.Marshal]::ZeroFreeBSTR^($b^)
     echo.
     echo # Build optional -i flag for key-based auth
-    echo $keyArgs = if ('%SSH_KEY%' -ne ''){ @^('-i', '%SSH_KEY%'^) } else { @^(^) }
+    echo $keyArgs = if ('%SSH_KEY%' -ne '')^{ @^('-i', '%SSH_KEY%'^) ^} else ^{ @^(^) ^}
     echo.
     echo # Copy script to the remote machine via SCP
     echo # SSH will prompt for password here if not using a key
     echo Write-Host 'Copying script to %REMOTE_HOST%...'
     echo ^& scp @keyArgs '%SCRIPT_SRC%' '%REMOTE_USER%@%REMOTE_HOST%:C:/Windows/Temp/PA_soft_shutdown.ps1'
-    echo if ($LASTEXITCODE -ne 0){ throw "SCP failed with exit code $LASTEXITCODE" }
+    echo if ($LASTEXITCODE -ne 0)^{ throw "SCP failed with exit code $LASTEXITCODE" ^}
     echo.
     echo # Build the remote PowerShell command, then base64-encode it so that
     echo # the firewall password and paths survive SSH quoting intact.
@@ -63,7 +63,7 @@ set "PS_TEMP=%TEMP%\pa_shutdown_%RANDOM%.ps1"
     echo # Execute on the remote machine via SSH
     echo Write-Host 'Executing shutdown script on %REMOTE_HOST%...'
     echo ^& ssh @keyArgs '%REMOTE_USER%@%REMOTE_HOST%' powershell -ExecutionPolicy Bypass -EncodedCommand $encoded
-    echo if ($LASTEXITCODE -ne 0){ throw "SSH execution failed with exit code $LASTEXITCODE" }
+    echo if ($LASTEXITCODE -ne 0)^{ throw "SSH execution failed with exit code $LASTEXITCODE" ^}
     echo.
     echo Write-Host 'Done.'
 )
