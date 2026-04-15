@@ -3,20 +3,23 @@ setlocal
 
 :: ============================================================
 :: Remotely executes PA_soft_shutdown.ps1 on another Windows
-:: machine via PowerShell Remoting (WinRM).
+:: machine via SSH (OpenSSH).
 ::
-:: Prerequisites on the REMOTE machine (run once as admin):
-::   winrm quickconfig
+:: Prerequisites on the REMOTE machine:
+::   OpenSSH Server installed and running.
+::   Install: Settings > Apps > Optional Features > OpenSSH Server
+::   Start:   net start sshd
 :: ============================================================
 
 echo.
-echo === Palo Alto Soft Shutdown - Remote Launcher ===
+echo === Palo Alto Soft Shutdown - Remote Launcher (SSH) ===
 echo.
 
-set /p REMOTE_HOST=Remote Windows machine (hostname or IP):
-set /p REMOTE_USER=Remote machine username (e.g. .\admin or DOMAIN\user):
+set /p REMOTE_HOST=Remote machine (hostname or IP):
+set /p REMOTE_USER=Remote machine SSH username:
 set /p FIREWALL_IP=Firewall IP:
 set /p FIREWALL_USER=Firewall username:
+set /p SSH_KEY=SSH key file (leave blank for password auth):
 
 :: Build path to the PS1 script (same folder as this .bat)
 set "SCRIPT_SRC=%~dp0PA_soft_shutdown.ps1"
@@ -30,42 +33,38 @@ if not exist "%SCRIPT_SRC%" (
 )
 
 :: Write a temp PowerShell helper script so we avoid
-:: complex quoting/escaping inside -Command
+:: complex quoting/escaping in the SSH command
 set "PS_TEMP=%TEMP%\pa_shutdown_%RANDOM%.ps1"
 
 > "%PS_TEMP%" (
     echo $ErrorActionPreference = 'Stop'
     echo.
-    echo # Collect passwords securely
-    echo $fwPass     = Read-Host 'Firewall password'      -AsSecureString
-    echo $remotePass = Read-Host 'Remote machine password' -AsSecureString
-    echo.
-    echo # Build credential for the remote Windows machine
-    echo $remoteCred = New-Object System.Management.Automation.PSCredential^('%REMOTE_USER%', $remotePass^)
-    echo.
-    echo # Open PS remoting session
-    echo Write-Host 'Connecting to %REMOTE_HOST%...'
-    echo $session = New-PSSession -ComputerName '%REMOTE_HOST%' -Credential $remoteCred -ErrorAction Stop
-    echo.
-    echo # Copy the shutdown script to the remote machine
-    echo Write-Host 'Copying script to remote machine...'
-    echo Copy-Item -Path '%SCRIPT_SRC%' -Destination 'C:\Windows\Temp\PA_soft_shutdown.ps1' -ToSession $session -Force
-    echo.
-    echo # Extract firewall password to pass over the (encrypted) WinRM channel,
-    echo # then re-wrap as SecureString on the remote side.
+    echo # Collect firewall password securely
+    echo $fwPass = Read-Host 'Firewall password' -AsSecureString
     echo $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR^($fwPass^)
     echo $p = [Runtime.InteropServices.Marshal]::PtrToStringAuto^($b^)
     echo [Runtime.InteropServices.Marshal]::ZeroFreeBSTR^($b^)
     echo.
-    echo # Run the script on the remote machine
-    echo Write-Host 'Executing shutdown script on %REMOTE_HOST%...'
-    echo Invoke-Command -Session $session -ArgumentList '%FIREWALL_IP%', '%FIREWALL_USER%', $p -ScriptBlock {
-    echo     param^($fwIP, $fwUser, $pw^)
-    echo     $sec = ConvertTo-SecureString $pw -AsPlainText -Force
-    echo     ^& 'C:\Windows\Temp\PA_soft_shutdown.ps1' -FirewallIP $fwIP -Username $fwUser -Password $sec -Force
-    echo }
+    echo # Build optional -i flag for key-based auth
+    echo $keyArgs = if ('%SSH_KEY%' -ne ''){ @^('-i', '%SSH_KEY%'^) } else { @^(^) }
     echo.
-    echo Remove-PSSession $session -ErrorAction SilentlyContinue
+    echo # Copy script to the remote machine via SCP
+    echo # SSH will prompt for password here if not using a key
+    echo Write-Host 'Copying script to %REMOTE_HOST%...'
+    echo ^& scp @keyArgs '%SCRIPT_SRC%' '%REMOTE_USER%@%REMOTE_HOST%:C:/Windows/Temp/PA_soft_shutdown.ps1'
+    echo if ($LASTEXITCODE -ne 0){ throw "SCP failed with exit code $LASTEXITCODE" }
+    echo.
+    echo # Build the remote PowerShell command, then base64-encode it so that
+    echo # the firewall password and paths survive SSH quoting intact.
+    echo $remoteCmd  = '$sec = ConvertTo-SecureString ''' + $p + ''' -AsPlainText -Force; '
+    echo $remoteCmd += '^& ''C:\Windows\Temp\PA_soft_shutdown.ps1'' -FirewallIP ''%FIREWALL_IP%'' -Username ''%FIREWALL_USER%'' -Password $sec -Force'
+    echo $encoded = [Convert]::ToBase64String^([Text.Encoding]::Unicode.GetBytes^($remoteCmd^)^)
+    echo.
+    echo # Execute on the remote machine via SSH
+    echo Write-Host 'Executing shutdown script on %REMOTE_HOST%...'
+    echo ^& ssh @keyArgs '%REMOTE_USER%@%REMOTE_HOST%' powershell -ExecutionPolicy Bypass -EncodedCommand $encoded
+    echo if ($LASTEXITCODE -ne 0){ throw "SSH execution failed with exit code $LASTEXITCODE" }
+    echo.
     echo Write-Host 'Done.'
 )
 
@@ -80,11 +79,12 @@ if %RC% NEQ 0 (
     echo Remote execution FAILED.
     echo.
     echo Troubleshooting:
-    echo   1. Ensure WinRM is enabled on %REMOTE_HOST%:
-    echo      Run as admin on that machine: winrm quickconfig
-    echo   2. If connecting across domains/workgroups you may need:
-    echo      winrm set winrm/config/client @{TrustedHosts="%REMOTE_HOST%"}
-    echo   3. Verify the remote account has admin rights on %REMOTE_HOST%.
+    echo   1. Ensure OpenSSH Server is installed and running on %REMOTE_HOST%
+    echo      Install: Settings ^> Apps ^> Optional Features ^> OpenSSH Server
+    echo      Start:   net start sshd
+    echo   2. Ensure OpenSSH Client is installed locally ^(built into Windows 10/11^)
+    echo      Install: Settings ^> Apps ^> Optional Features ^> OpenSSH Client
+    echo   3. For key auth, verify the public key is in the remote authorized_keys file
     pause
     exit /b %RC%
 )
