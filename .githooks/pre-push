@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+# pre-push — the local test gate.
+#
+# Runs the project's own suite (scripts/test.sh) before any push. If tests fail,
+# the push is aborted and nothing reaches the remote. This is the primary CI
+# mechanism for this project — see CI_CD.md.
+#
+# It is active because bootstrap.sh set `git config core.hooksPath .githooks`,
+# so this file is tracked in the repo (unlike .git/hooks/*).
+#
+# Emergency bypass (use sparingly, you own the consequences):
+#   git push --no-verify
+set -eu
+
+if [ -f scripts/test.sh ]; then
+  echo "pre-push: running the test gate (scripts/test.sh) ..."
+  if ! sh scripts/test.sh; then
+    echo "" >&2
+    echo "pre-push: TESTS FAILED — push aborted." >&2
+    echo "          Fix them, or bypass with: git push --no-verify" >&2
+    exit 1
+  fi
+else
+  echo "pre-push: no scripts/test.sh found — skipping test gate." >&2
+fi
+
+exit 0
