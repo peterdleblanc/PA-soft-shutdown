@@ -40,3 +40,5 @@ predates it and is not yet documented here."]
 ---
 
 **Tooling sync (2026-07-16):** `scripts/test.sh` refreshed from ClaudeTemplate via `bootstrap.sh --sync-tooling` — the pre-push test gate now prints a one-line PASS/FAIL summary per suite by default (full output lands in `/tmp/test-<repo>.log`; run with `--verbose` for the old stream). Slash commands and `.framework-version` were re-synced in the same pass. No project code or doc content was touched.
+
+**Tooling sync (2026-07-16, second pass):** `.mcp.json` added from ClaudeTemplate via `bootstrap.sh --sync-tooling` — registers the **toolset-mcp** MCP server, so Claude sessions in this repo get native PCC + ProjectAssessment tools (incl. `run_assessment`) from the next session start. No project code or doc content was touched.

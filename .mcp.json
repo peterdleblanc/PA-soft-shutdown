@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "toolset-mcp": {
+      "command": "/github/toolset-mcp/.venv/bin/python",
+      "args": ["-m", "toolset_mcp"],
+      "env": {
+        "PCC_API_URL": "http://localhost:10002",
+        "TOOLSET_MCP_ENABLE_WRITES": "1"
+      }
+    }
+  }
+}
