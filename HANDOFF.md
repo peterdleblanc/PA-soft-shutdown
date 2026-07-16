@@ -36,3 +36,7 @@ predates it and is not yet documented here."]
 3. Write the real one-paragraph description in `README.md`.
 4. Add remaining framework files as they become relevant (DATABASE.md, FEATURES.md,
    DEPLOYMENT.md, …) — copy them individually from `/github/ClaudeTemplate`.
+
+---
+
+**Tooling sync (2026-07-16):** `scripts/test.sh` refreshed from ClaudeTemplate via `bootstrap.sh --sync-tooling` — the pre-push test gate now prints a one-line PASS/FAIL summary per suite by default (full output lands in `/tmp/test-<repo>.log`; run with `--verbose` for the old stream). Slash commands and `.framework-version` were re-synced in the same pass. No project code or doc content was touched.
