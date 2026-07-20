@@ -81,6 +81,24 @@ run_suite() {
   fi
 }
 
+# venv_python — echo the project's own virtualenv interpreter if one is checked
+# out at the repo root, else return non-zero.
+#
+# The pre-push hook (and /end-session) run this script with NO venv active, so a
+# bare `pytest` or `python3 -m pytest` resolves to the SYSTEM interpreter —
+# whose dependency versions can differ from the project's pinned ones. That is
+# not hypothetical: a mismatched system WeasyPrint failed 5 PDF-rendering tests
+# here that pass cleanly under .venv (weasyprint 69.0 / pydyf 0.12.1), blocking
+# an unrelated docs push. Preferring the venv interpreter runs the gate against
+# the same deps the project actually ships. Mirrors scripts/test_score.py's
+# _target_python().
+venv_python() {
+  for _rel in .venv/bin/python venv/bin/python .venv/Scripts/python.exe; do
+    if [ -x "$_rel" ]; then printf '%s\n' "$_rel"; return 0; fi
+  done
+  return 1
+}
+
 echo "== test.sh: detecting toolchains =="
 
 # --- Rust -------------------------------------------------------------------
@@ -169,8 +187,13 @@ py_test_files=$(git ls-files \
   '*/test_*.py' '*/*_test.py' '*/conftest.py' 2>/dev/null | head -1)
 
 if [ -n "$py_test_files" ]; then
+  # Prefer the project's own venv interpreter (see venv_python above) so the gate
+  # runs against the project's pinned deps, not whatever the host happens to ship.
+  # Fall back to a PATH pytest, then a system `python3 -m pytest`.
   pytest_cmd=""
-  if command -v pytest >/dev/null 2>&1; then
+  if _vpy=$(venv_python) && "$_vpy" -c 'import pytest' 2>/dev/null; then
+    pytest_cmd="$_vpy -m pytest"
+  elif command -v pytest >/dev/null 2>&1; then
     pytest_cmd="pytest"
   elif command -v python3 >/dev/null 2>&1 && python3 -c 'import pytest' 2>/dev/null; then
     pytest_cmd="python3 -m pytest"
