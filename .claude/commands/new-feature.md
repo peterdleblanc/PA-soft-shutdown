@@ -74,6 +74,26 @@ Add the confirmed entry after the last existing feature, before any footer or no
 
 ---
 
+### Step 5B — Put it on the board
+
+A spec in FEATURES.md is a description; a ticket is work someone can see is
+outstanding. Create the ticket so the feature does not exist only in a file
+nobody opens.
+
+**Prefer a ROADMAP.md checkbox** if this feature belongs to a phase — PCC scans
+those into tickets automatically, which keeps the roadmap and the board in step
+without a second source of truth.
+
+Otherwise, `resolve_project` on this repo's absolute path (`pwd`), then
+`create_task` with the feature name, a one-line description, and a priority you
+have asked the user for rather than assumed. This is a write and really mutates
+PCC.
+
+If toolset-mcp is unavailable, say so in one line — the spec is written either
+way.
+
+---
+
 ### Step 6 — Confirm
 
 Print:

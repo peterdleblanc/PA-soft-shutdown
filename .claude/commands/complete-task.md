@@ -164,7 +164,7 @@ Read `HANDOFF.md`. Make two changes:
 1. Update **"Completed This Session"** to reflect today's task — replace or update the section with a brief summary. Keep it to 3–5 bullets max.
 2. Remove this task from **"Next Session — Start Here"** if it appears there.
 
-Do not rewrite the whole file. Surgical edits only. Target: 60–80 lines total.
+Do not rewrite the whole file. Surgical edits only. Ceiling: 250 lines total.
 
 ---
 
@@ -173,6 +173,27 @@ Do not rewrite the whole file. Surgical edits only. Target: 60–80 lines total.
 Read `ROADMAP.md`. If the completed task corresponds to a phase item or checkbox, mark it done. If it completes an entire phase, update the project status header.
 
 Skip this step if the task has no roadmap entry.
+
+---
+
+### Step 4B — Close the PCC ticket (if there is one)
+
+PCC scans `ROADMAP.md` and turns its checkboxes into tickets, so a roadmap item ticked
+in Step 4 usually has a live ticket that is now stale.
+
+1. `resolve_project` with this repo's absolute path (`pwd`) — identity is keyed on the
+   path, not the name.
+2. `list_tasks` with that `project_id` and `status: "todo"`, and find the ticket
+   matching the completed work. Match on the ticket's `source_line` against what you
+   just ticked, not on a fuzzy title read — several tickets often share wording.
+3. `complete_task` on it. This is a write and really mutates PCC.
+
+**Do not guess at a match.** If no ticket clearly corresponds, say so and move on;
+inventing a completion is worse than leaving the board slightly behind. If more than one
+plausibly matches, show them and ask.
+
+If toolset-mcp is unavailable, note `PCC unreachable — ticket not closed` in the output
+and continue. The markdown is committed either way.
 
 ---
 

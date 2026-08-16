@@ -14,6 +14,18 @@ Decisions that aren't recorded get re-made. This command captures the full conte
 
 ---
 
+### Step 0 — Check whether this is already decided
+
+Call `list_decisions` (filter by this project, and again with `q` set to the topic).
+**A decision that already exists does not need re-making.** If you find one covering
+this ground, show it and ask whether the user wants to supersede it rather than adding
+a near-duplicate — a decision log with two answers to one question is worse than none.
+
+If toolset-mcp is unavailable, say so in one line and rely on `DECISIONS.md` alone for
+the duplicate check.
+
+---
+
 ### Step 1 — Read DECISIONS.md
 
 Read `DECISIONS.md`. Note:
@@ -83,18 +95,27 @@ Wait for confirmation.
 
 ---
 
-### Step 5 — Insert into DECISIONS.md
+### Step 5 — Record it in both places
 
-Add the confirmed entry after the last existing decision entry.
+1. **`DECISIONS.md`** — add the confirmed entry after the last existing decision entry.
+2. **PCC** — call `add_decision` with the same title, context, decision and
+   consequences, so the decision is visible to sessions in *other* projects. This is a
+   write and really mutates PCC; only call it after the Step 4 confirmation.
+
+If PCC is unreachable, write the markdown entry anyway and say plainly that the
+decision is local-only until someone re-runs it — an unrecorded decision is the thing
+this command exists to prevent.
 
 ---
 
 ### Step 6 — Confirm
 
-Print:
+Print, naming where it landed:
 
 ```
 Decision recorded: DEC-NNN — [title]
 Date: [today]
 Status: Accepted
+Recorded in: DECISIONS.md + PCC
+             — or — DECISIONS.md only (PCC unreachable)
 ```

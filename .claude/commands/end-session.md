@@ -81,7 +81,8 @@ Read `HANDOFF.md`. Make these changes:
 3. Replace the **"Completed This Session"** section with a summary of today's work (3–5 bullets, specific — what was built, fixed, or changed)
 4. Update **"Next Session — Start Here"** to reflect what's actually next — remove anything just completed, add anything newly discovered
 
-Surgical edits only. Do not rewrite sections that didn't change. Target: 60–80 lines total.
+Surgical edits only. Do not rewrite sections that didn't change. Ceiling: 250 lines total —
+if the file is near it, past sessions are overdue for HANDOFF_HISTORY.md.
 
 ---
 
@@ -125,6 +126,38 @@ Skip this step for sessions that only touched documentation, configuration, or i
 Read `ROADMAP.md`. If any phase items were completed this session, mark them done (`- [x]`). If a phase is now fully complete, update the status header and the status overview diagram at the top.
 
 Skip if the session had no roadmap-relevant work.
+
+---
+
+### Step 5B — Sync PCC, and offer a re-assessment
+
+Two things, one cheap and one not.
+
+**Cheap — close what the session finished.** `resolve_project` on this repo's absolute
+path (`pwd`), then `list_tasks` with `status: "todo"`, and `complete_task` on any ticket
+whose work actually landed this session. Match against what you ticked in Step 5, not on
+a fuzzy title read. If nothing clearly matches, say so and move on — inventing a
+completion is worse than a slightly stale board.
+
+**Not cheap — a fresh assessment.** `run_assessment` publishes new doc/code/db reports
+for this project, which makes the next session's `/doc-health` meaningful instead of
+quoting a stale one.
+
+> **`run_assessment` spends Anthropic quota and takes minutes. Offer it; never fire it
+> automatically.** Ask:
+>
+> ```
+> Run a fresh ProjectAssessment for this project before committing?
+> It publishes new doc/code/db reports, spends quota, and takes a few minutes. (y/N)
+> ```
+>
+> Default is no. If the user declines, continue — nothing depends on it.
+
+If the user accepts, trigger it and report the job id. **Do not block the commit waiting
+for it**; the reports land on the dashboard independently. Note in the summary that a
+run is in flight.
+
+If toolset-mcp is unavailable, skip this whole step with a one-line note.
 
 ---
 

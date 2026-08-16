@@ -75,6 +75,25 @@ Wait for confirmation before writing.
 
 ---
 
+### Step 5B — Record the reasoning, and flag the review
+
+Two follow-ups, both easy to skip and both expensive to skip.
+
+**If the change involved a real choice** — a denormalisation, a new index with a
+write cost, a type change with a migration risk, choosing one of several viable
+shapes — record it with `/add-decision`. Schema decisions are the ones most often
+re-litigated a year later, because the schema shows *what* was chosen and never
+*why*.
+
+**Note that the published `db_review` is now stale.** ProjectAssessment scored the
+schema as it was before this change. Do not quote that score as current. A fresh
+`run_assessment` is worth offering at the next `/end-session` rather than firing
+here — it spends quota and takes minutes, and the migration should land first.
+
+Skip both silently if toolset-mcp is unavailable.
+
+---
+
 ### Step 6 — Confirm
 
 Print:

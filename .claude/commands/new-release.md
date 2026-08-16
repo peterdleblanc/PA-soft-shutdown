@@ -30,6 +30,32 @@ Commit or stash them before running /new-release.
 
 ---
 
+### Step 1B — Pre-release quality check
+
+A release is the one moment where an out-of-date assessment actually costs something.
+
+1. `resolve_project` on this repo's absolute path (`pwd`), then `latest_assessment`.
+2. **Check the report's date against `git log`.** If it predates the commits going into
+   this release, it is describing an older codebase — say so rather than quoting its
+   scores as if they were current.
+3. If it is stale, offer a fresh run:
+
+   ```
+   The latest assessment is from [date], before [N] commits in this release.
+   Run a fresh one before tagging? It spends quota and takes a few minutes. (y/N)
+   ```
+
+   Unlike `/end-session`, it is worth **waiting** for this one — the point is to know
+   what you are shipping. Poll `assessment_status` and report the scores when it lands.
+
+4. Also `list_tasks` with `status: "todo"` for anything open that should block the
+   release. Report them; do not decide for the user.
+
+**None of this is a gate.** Report what you found and let the user decide. If
+toolset-mcp is unavailable, note it in one line and continue.
+
+---
+
 ### Step 2 — Read the changelog
 
 Read `CHANGELOG.md`. Find the `## [Unreleased]` section.

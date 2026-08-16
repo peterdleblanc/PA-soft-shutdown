@@ -35,3 +35,21 @@ This repository contains a single PowerShell script (`PA_soft_shutdown.ps1`) tha
 - Uses `New-SSHShellStream` instead of `Invoke-SSHCommand` because the PAN-OS shutdown command requires interactive confirmation
 - `SecureString` is used for the password parameter; it is briefly converted to plaintext in-memory via `Marshal::SecureStringToBSTR` for SSH credential construction, and the BSTR is zeroed in the `finally` block
 - The 20-second sleep after login is intentional — the comment in the code references an original 45-second value that was reduced; adjust if the device needs more time before accepting commands
+
+## Coding Discipline
+
+@.claude/CODING_DISCIPLINE.md
+
+Four rules — think before coding, simplicity first, surgical changes,
+goal-driven execution. Identical across every project, so
+`bootstrap.sh --sync-tooling` refreshes it. Edit it upstream in
+`/github/ClaudeTemplate`, not here.
+
+## Using the Toolset
+
+@.claude/TOOLSET.md
+
+How to use PCC and ProjectAssessment from a session — claim a port rather than
+picking one, check decisions before re-arguing them, and load the
+`cmux-orchestrate` skill before spawning agent panes. Fleet-identical and
+refreshed by `--sync-tooling`; edit it upstream in `/github/ClaudeTemplate`.
